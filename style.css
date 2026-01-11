@@ -1,0 +1,778 @@
+:root{
+  --bg:#87ceeb;
+  --ground:#c6882b;
+  --fg:#fff;
+  --pipe:#2c8a2c;
+  --bird:#ffdf4a;
+  --muted: rgba(0,0,0,0.35);
+  --ui-bg: rgba(255,255,255,0.08);
+}
+
+/* Pixel font (from project assets) */
+@font-face{
+  font-family: 'Pixel';
+  src: url('/pixel (1).ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  /* lock the viewport so the page can't scroll */
+  overflow:hidden;
+}
+
+#game{
+  display:block;
+  width:100vw;
+  height:100vh;
+  touch-action: manipulation;
+  background: none;
+}
+
+#ui{
+  position: absolute;
+  inset: 12px;
+  display:flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  gap:12px;
+}
+
+#score{
+  pointer-events: none;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+  font-weight:700;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+
+  /* move score to top-center of the viewport */
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0 6px;
+  z-index: 10;
+}
+
+/* Keep UI touch-friendly and small footprint */
+@media (max-width:600px){
+  #score{ font-size:22px; }
+}
+
+/* Title screen overlay (no dark background – just content over the game) */
+#titleScreen{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* center the title UI so it always fits inside the camera/viewport */
+  justify-content: center;
+  pointer-events: auto;
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 16px;
+  z-index: 15;
+}
+
+#titleLogo{
+  max-width: 70%;
+  height: auto;
+  image-rendering: pixelated;
+  /* nudge the title up a little without affecting the buttons */
+  margin-top: -16px;
+}
+
+#gameOverScreen{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 16px;
+  z-index: 20;
+  /* hidden state */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+}
+
+/* animated visible state: slide up and "land" with a small bounce */
+#gameOverScreen.visible{
+  animation: gameOverDrop 450ms cubic-bezier(0.25, 0.9, 0.35, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes gameOverDrop{
+  0%{
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  70%{
+    opacity: 1;
+    transform: translateY(-6px);
+  }
+  100%{
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#gameOverLogo{
+  max-width: 70%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+#gameOverScores{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+}
+
+.go-label{
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.go-score-images img{
+  height: 1.2em;
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+
+.gameover-buttons{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 16px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.gameover-buttons #restartBtn{
+  grid-column: 1 / span 2;
+  justify-self: center;
+}
+
+.gameover-buttons #menuBtn{
+  grid-column: 1;
+  justify-self: flex-start;
+}
+
+.gameover-buttons #goLeaderBtn{
+  grid-column: 2;
+  justify-self: flex-end;
+  margin-left: 24px;
+}
+
+.gameover-buttons #shareBtn{
+  grid-column: 1 / span 2;
+  justify-self: center;
+}
+
+.title-buttons{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
+  gap: 16px;
+  /* keep a small gap below the logo so everything stays within the visible area */
+  margin-top: 20px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.title-buttons button,
+.gameover-buttons button,
+.share-buttons button,
+.leader-footer button,
+.leader-close-row button{
+  position: relative;
+  background: linear-gradient(to bottom, #f8f0b8, #d3b86a);
+  color: #222;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 0;
+  font-weight: 700;
+  min-width: 90px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'Pixel', "Press Start 2P", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+  /* single dark pixel outline + drop shadow for depth (thinner) */
+  box-shadow:
+    0 0 0 2px #000000,
+    2px 2px 0 0 #000000;
+  cursor: pointer;
+}
+
+/* pixelated frame with stepped corners */
+.title-buttons button::before,
+.gameover-buttons button::before,
+.share-buttons button::before{
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  /* build a pixel frame with stair-step corners using box-shadows (thinner) */
+  box-sizing: border-box;
+  border: 0;
+  /* draw the main rectangular outline */
+  box-shadow:
+    /* top/bottom/left/right edges (1px "pixels" repeated at corners) */
+    -2px 0 0 0 #000000,
+    2px 0 0 0 #000000,
+    0 -2px 0 0 #000000,
+    0 2px 0 0 #000000,
+    /* extra pixels to make corners look stepped/jagged */
+    -2px -2px 0 0 #000000,
+    2px -2px 0 0 #000000,
+    -2px 2px 0 0 #000000,
+    2px 2px 0 0 #000000;
+}
+
+#rateBtn{
+  grid-column: 1 / span 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+#playBtn{
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: flex-start;
+}
+
+#leaderBtn{
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: flex-end;
+  margin-left: 24px;
+}
+
+#settingsBtn{
+  grid-column: 1 / span 2;
+  grid-row: 3;
+  justify-self: center;
+}
+
+#skinsBtn{
+  grid-column: 1 / span 2;
+  grid-row: 4;
+  justify-self: center;
+}
+
+/* subtle press effect while keeping the pixelated border style */
+.title-buttons button:active,
+.gameover-buttons button:active,
+.share-buttons button:active{
+  transform: translate(2px, 2px);
+  box-shadow:
+    0 0 0 2px #000000,
+    1px 1px 0 0 #000000;
+}
+
+#titleCredits{
+  font-size: 10px;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+  max-width: 90%;
+  position: absolute;
+  bottom: 8px;
+}
+
+/* Desktop/PC adjustments */
+@media (min-width: 768px){
+  /* On larger screens just keep a small padding; layout already centers itself */
+  #titleScreen{
+    padding: 24px;
+  }
+
+  .title-buttons{
+    margin-top: 24px;
+  }
+}
+
+/* Share overlay for "run replay" */
+#shareOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: none;
+}
+
+#shareOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+.share-card{
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 10px;
+  background: rgba(0,0,0,0.54);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000, 3px 3px 0 0 #000000;
+  color: #fff;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+}
+
+.share-title{
+  font-size: 10px;
+  text-align: center;
+  margin-bottom: 6px;
+  letter-spacing: 0.06em;
+}
+
+.share-video{
+  position: relative;
+  background: #202020;
+  padding: 10px 8px 12px;
+  border-radius: 2px;
+  margin-bottom: 10px;
+  box-shadow: inset 0 0 0 2px #000000;
+}
+
+.share-video video{
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+  background: #000;
+  display: block;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 2px #000000;
+  margin-bottom: 6px;
+}
+
+.share-message{
+  font-size: 8px;
+  line-height: 1.4;
+  padding: 6px 4px;
+  background: #000;
+  box-shadow: 0 0 0 2px #000000;
+  margin-bottom: 6px;
+  text-align: left;
+  display: none;
+}
+
+.share-video-label{
+  font-size: 8px;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+
+.share-video .go-score-images img{
+  height: 1.1em;
+}
+
+.share-video-bar{
+  position: relative;
+  margin-top: 8px;
+  height: 6px;
+  background: #444;
+  overflow: hidden;
+}
+
+.share-video-bar::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,#f8f0b8,#d3b86a,#f8f0b8);
+  transform-origin: left center;
+  animation: replayProgress 2.4s linear infinite;
+}
+
+@keyframes replayProgress{
+  0%{ transform: scaleX(0); }
+  100%{ transform: scaleX(1); }
+}
+
+.share-buttons{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Rate / donate overlay */
+#rateOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+#rateOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+#settingsOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 27;
+  pointer-events: none;
+}
+
+#settingsOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+#playerCountOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 27;
+  pointer-events: none;
+}
+
+#playerCountOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+#skinsOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 28;
+  pointer-events: none;
+}
+
+#skinsOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+#leaderOverlay{
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 26;
+  pointer-events: none;
+}
+
+#leaderOverlay.visible{
+  display: flex;
+  pointer-events: auto;
+}
+
+.leader-card{
+  min-width: 240px;
+  max-width: 320px;
+  max-height: 80vh;
+  padding: 12px 10px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000, 3px 3px 0 0 #000000;
+  color: #fff;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leader-title{
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.leader-yourpos{
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.leader-table-wrapper{
+  flex: 1;
+  overflow-y: auto;
+  border: 2px solid #000000;
+  background: rgba(0,0,0,0.4);
+}
+
+.leader-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+}
+
+.leader-table th,
+.leader-table td{
+  padding: 4px 3px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.leader-table th:nth-child(1),
+.leader-table td:nth-child(1){
+  text-align: right;
+  width: 16%;
+}
+
+.leader-table th:nth-child(3),
+.leader-table td:nth-child(3){
+  text-align: right;
+  width: 18%;
+}
+
+.leader-table th:nth-child(4),
+.leader-table td:nth-child(4){
+  text-align: right;
+  width: 20%;
+}
+
+.leader-row-me{
+  background: rgba(248,240,184,0.2);
+}
+
+.leader-footer{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.leader-page-info{
+  font-size: 9px;
+}
+
+.leader-close-row{
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.rate-card{
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000, 3px 3px 0 0 #000000;
+  color: #fff;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+}
+
+.settings-card{
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000, 3px 3px 0 0 #000000;
+  color: #fff;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+}
+
+.skins-card{
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000, 3px 3px 0 0 #000000;
+  color: #fff;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  image-rendering: pixelated;
+}
+
+.rate-title{
+  font-size: 10px;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+
+.rate-text{
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.settings-title{
+  font-size: 10px;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+
+.skins-title{
+  font-size: 10px;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+
+.skins-content{
+  margin-bottom: 10px;
+}
+
+.skins-text{
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.skins-buttons{
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.skins-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+}
+
+.skin-button{
+  background: #222;
+  color: #fff;
+  border: none;
+  padding: 6px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px #000000, 2px 2px 0 0 #000000;
+  image-rendering: pixelated;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 9px;
+}
+
+.skin-button img{
+  width: 36px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.skin-button span{
+  font-size: 8px;
+}
+
+.skin-button.active{
+  background: #f8f0b8;
+  color: #222;
+}
+
+.skin-button.active img{
+  filter: brightness(1.1);
+}
+
+.settings-row{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.settings-row-toggle{
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-label{
+  font-size: 8px;
+  opacity: 0.85;
+}
+
+#settingsVolume{
+  width: 100%;
+}
+
+.settings-buttons{
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rate-input-row{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.rate-label{
+  font-size: 8px;
+  opacity: 0.85;
+}
+
+#donateAmount{
+  padding: 6px 6px 4px;
+  border-radius: 0;
+  border: 2px solid #000000;
+  background: #f8f0b8;
+  font-family: 'Pixel', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+#donateAmount::-webkit-outer-spin-button,
+#donateAmount::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#donateAmount[type=number]{
+  -moz-appearance: textfield;
+}
+
+.rate-buttons{
+  display: flex;
+  justify-content: center;
+}
+
+.rate-buttons #donateBtn{
+  min-width: 120px;
+}

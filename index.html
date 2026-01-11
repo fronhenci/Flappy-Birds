@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Flappy (no textures)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="gameOverScreen">
+    <img id="gameOverLogo" src="/gameover.png" alt="Game Over">
+    <div id="gameOverScores">
+      <div class="go-label">SCORE</div>
+      <div id="goScore" class="go-score-images"></div>
+      <div class="go-label">BEST</div>
+      <div id="goBest" class="go-score-images"></div>
+    </div>
+    <div class="gameover-buttons">
+      <button id="restartBtn">Restart</button>
+      <button id="menuBtn">Menu</button>
+      <button id="goLeaderBtn">Leaderboards</button>
+      <button id="shareBtn">Share</button>
+    </div>
+  </div>
+
+  <div id="shareOverlay">
+    <div class="share-card">
+      <div class="share-title">RUN REPLAY</div>
+      <div class="share-video">
+        <video id="shareVideo" muted playsinline loop></video>
+        <div id="shareMessage" class="share-message"></div>
+        <div class="share-video-label">SCORE</div>
+        <div id="shareScore" class="go-score-images"></div>
+        <div class="share-video-label">BEST</div>
+        <div id="shareBest" class="go-score-images"></div>
+        <div class="share-video-bar"></div>
+      </div>
+      <div class="share-buttons">
+        <button id="shareCommentBtn">Share in comments</button>
+        <button id="shareCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="titleScreen">
+    <img id="titleLogo" src="/Logo.png" alt="Floppy Bird Websim Edition Logo">
+    <div class="title-buttons">
+      <button id="rateBtn">Rate</button>
+      <button id="playBtn">Play</button>
+      <button id="leaderBtn">Leaderboards</button>
+      <button id="settingsBtn">Settings</button>
+      <button id="skinsBtn">Skins</button>
+    </div>
+    <div id="titleCredits">
+      THIS GAME IS A REMAKE OF THE ORIGINAL GAME, CREDITS TO .GEARS
+    </div>
+  </div>
+
+  <div id="rateOverlay">
+    <div class="rate-card">
+      <div class="rate-title">RATE / SUPPORT</div>
+      <div class="rate-text">
+        Websim does not have a rating system.<br>
+        If you want, you can like the project if you enjoyed it,<br>
+        and you can also donate if you want.
+      </div>
+      <div class="rate-input-row">
+        <label for="donateAmount" class="rate-label">DONATION AMOUNT</label>
+        <input id="donateAmount" type="number" min="0" step="1" placeholder="0">
+      </div>
+      <div class="rate-buttons">
+        <button id="donateBtn">Donate</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay">
+    <div class="settings-card">
+      <div class="settings-title">SETTINGS</div>
+      <div class="settings-row">
+        <label for="settingsVolume" class="settings-label">SOUND VOLUME</label>
+        <input id="settingsVolume" type="range" min="0" max="100" step="1">
+      </div>
+      <div class="settings-row settings-row-toggle">
+        <label for="settingsRecord" class="settings-label">RECORD RUNS</label>
+        <input id="settingsRecord" type="checkbox">
+      </div>
+      <div class="settings-buttons">
+        <button id="settingsSaveBtn">Save</button>
+        <button id="settingsCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="playerCountOverlay">
+    <div class="playercount-card">
+      <div class="playercount-title">SELECT PLAYERS</div>
+      <div class="playercount-text">
+        How many players are there?
+      </div>
+      <div class="playercount-buttons">
+        <button class="playercount-button" data-count="1">1 PLAYER</button>
+        <button class="playercount-button" data-count="2">2 PLAYERS</button>
+        <button class="playercount-button" data-count="3">3 PLAYERS</button>
+        <button class="playercount-button" data-count="4">4 PLAYERS</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="skinsOverlay">
+    <div class="skins-card">
+      <div class="skins-title">SKIN SHOP</div>
+      <div class="skins-content">
+        <div class="skins-text">
+          Choose your bird:
+        </div>
+        <div class="skins-grid">
+          <button class="skin-button" data-skin="yellow">
+            <img src="/Yellow-midflap.png" alt="Classic Yellow">
+            <span>Classic</span>
+          </button>
+          <button class="skin-button" data-skin="red">
+            <img src="/Red-midflap.png" alt="Red Bird">
+            <span>Red</span>
+          </button>
+          <button class="skin-button" data-skin="blue">
+            <img src="/Blue-midflap.png" alt="Blue Bird">
+            <span>Blue</span>
+          </button>
+          <button class="skin-button" data-skin="green">
+            <img src="/Green-midflap.png" alt="Green Bird">
+            <span>Green</span>
+          </button>
+        </div>
+      </div>
+      <div class="skins-buttons">
+        <button id="skinsCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="leaderOverlay">
+    <div class="leader-card">
+      <div class="leader-title">LEADERBOARDS</div>
+      <div id="leaderYourPos" class="leader-yourpos"></div>
+      <div class="leader-table-wrapper">
+        <table class="leader-table">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Player Name</th>
+              <th>Score</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="leaderList"></tbody>
+        </table>
+      </div>
+      <div class="leader-footer">
+        <button id="leaderPrevBtn">Prev</button>
+        <span id="leaderPageInfo" class="leader-page-info"></span>
+        <button id="leaderNextBtn">Next</button>
+      </div>
+      <div class="leader-close-row">
+        <button id="leaderCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ui">
+    <div id="score">0</div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
